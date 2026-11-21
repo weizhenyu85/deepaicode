@@ -236,15 +236,23 @@ export function startCallbackServer({ timeoutMs = CALLBACK_TIMEOUT_MS, signal, l
   });
 }
 
-/** ③ 浏览器登录（手动打开链接，不自动弹浏览器）：粘贴回调地址里的 code。 */
+/** ③ 浏览器登录（手动打开链接，不自动弹浏览器）：复制链接后粘贴 code。 */
 function browserMethod({ options, lang, fetchImpl }) {
   const origin = trimSlash(options.baseOrigin || DEFAULT_BASE_ORIGIN);
   const state = randomBytes(16).toString("hex");
   const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`;
 
   const finish = async (code) => {
-    const value = String(code ?? "").trim();
+    let value = String(code ?? "").trim();
     if (!value) return { type: "failed", error: t(lang, "errKeyMissing") };
+    // 允许直接粘贴完整回调 URL
+    try {
+      const u = new URL(value);
+      const c = u.searchParams.get("code");
+      if (c) value = c.trim();
+    } catch {
+      // 不是 URL，当作 code
+    }
     try {
       const cred = await exchangeCode(origin, value, { fetchImpl });
       return directSuccess({
@@ -263,8 +271,18 @@ function browserMethod({ options, lang, fetchImpl }) {
     prompts: [
       {
         type: "text",
+        key: "login_url",
+        message: `${t(lang, "browserCopyUrl")}\n\n${loginUrl}`,
+        placeholder: loginUrl,
+        default: loginUrl,
+        initial: loginUrl,
+        value: loginUrl,
+      },
+      {
+        type: "text",
         key: "code",
-        message: `${t(lang, "browserInstructions")}\n\n${loginUrl}`,
+        message: t(lang, "browserPasteCode"),
+        placeholder: "code",
       },
     ],
     async authorize(inputs = {}) {

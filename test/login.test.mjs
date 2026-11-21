@@ -20,7 +20,9 @@ test("createMethods：三路（浏览器推荐在前）", () => {
   assert.equal(methods.length, 3);
   assert.deepEqual(methods.map((m) => m.type), ["api", "api", "api"]);
   assert.match(methods[0].label, /推荐/);
-  assert.ok(Array.isArray(methods[0].prompts) && methods[0].prompts.some((p) => p.key === "code"));
+  const promptKeys = (methods[0].prompts ?? []).map((p) => p.key);
+  assert.ok(promptKeys.includes("login_url"));
+  assert.ok(promptKeys.includes("code"));
   assert.match(methods[1].label, /凭据/);
   assert.match(methods[2].label, /Key/);
 });
@@ -107,7 +109,7 @@ test("debug 日志只记字段名，绝不记录 Key 值", async () => {
   assert.ok(!all.includes(KEY), "日志不得包含 Key 明文");
 });
 
-test("浏览器登录：提示里给出手动链接（不自动打开），粘贴 code 换 Key", async () => {
+test("浏览器登录：提供可复制的手动链接（不自动打开），粘贴 code 换 Key", async () => {
   let called = 0;
   const fetchImpl = async (url, init) => {
     called += 1;
@@ -119,19 +121,47 @@ test("浏览器登录：提示里给出手动链接（不自动打开），粘�
   const method = methods[0];
 
   assert.equal(method.type, "api");
-  const prompt = method.prompts.find((p) => p.key === "code");
-  assert.ok(prompt, "应有 code 输入提示");
-  const match = String(prompt.message).match(/https?:\/\/\S+/);
-  assert.ok(match, "提示里应包含登录链接");
+  const urlPrompt = method.prompts.find((p) => p.key === "login_url");
+  const codePrompt = method.prompts.find((p) => p.key === "code");
+  assert.ok(urlPrompt, "应有 login_url 提示");
+  assert.ok(codePrompt, "应有 code 输入提示");
+
+  const urlText = [
+    urlPrompt.message,
+    urlPrompt.placeholder,
+    urlPrompt.default,
+    urlPrompt.initial,
+    urlPrompt.value,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const match = String(urlText).match(/https?:\/\/\S+/);
+  assert.ok(match, "应提供登录链接（可复制）");
   const loginUrl = new URL(match[0]);
   assert.equal(loginUrl.pathname, "/deepai_code/desktop_auth/");
   assert.ok(loginUrl.searchParams.get("state")?.length >= 16);
   assert.equal(loginUrl.searchParams.get("port"), "0");
 
-  const out = await method.authorize({ code: "the-code" });
+  const out = await method.authorize({ login_url: loginUrl.toString(), code: "the-code" });
   assert.equal(out.type, "success");
   assert.equal(out.key, KEY);
   assert.equal(out.metadata.source, "browser");
+  assert.equal(called, 1);
+});
+
+test("浏览器登录：粘贴完整回调 URL 时自动提取 code", async () => {
+  let called = 0;
+  const fetchImpl = async (url, init) => {
+    called += 1;
+    assert.deepEqual(JSON.parse(init.body), { code: "the-code" });
+    return json({ api_key: KEY, username: "ada", is_pro: false });
+  };
+  const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl } });
+  const out = await methods[0].authorize({
+    code: "http://127.0.0.1:12345/auth-callback?code=the-code&state=xyz",
+  });
+  assert.equal(out.type, "success");
+  assert.equal(out.key, KEY);
   assert.equal(called, 1);
 });
 
