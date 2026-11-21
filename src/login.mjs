@@ -8,7 +8,6 @@
 
 import { createServer } from "node:http";
 import { randomBytes } from "node:crypto";
-import { spawnSync } from "node:child_process";
 
 import { DEFAULT_BASE_ORIGIN } from "./constants.mjs";
 import { findDesktopCredentials } from "./credentials.mjs";
@@ -18,44 +17,6 @@ import { resolveLang, t } from "./i18n.mjs";
 import { resolveMachineFingerprint } from "./machine.mjs";
 import { accountIdFor } from "./modes.mjs";
 import { trimSlash } from "./util.mjs";
-
-function tryCopyToClipboard(text) {
-  const s = String(text ?? "");
-  if (!s) return false;
-  try {
-    if (process.platform === "win32") {
-      let r = spawnSync("cmd.exe", ["/d", "/s", "/c", "clip"], {
-        input: s,
-        encoding: "utf8",
-        windowsHide: true,
-        timeout: 3000,
-      });
-      if (r.status === 0) return true;
-      r = spawnSync("powershell.exe", [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        "Set-Clipboard -Value ([Console]::In.ReadToEnd())",
-      ], { input: s, encoding: "utf8", windowsHide: true, timeout: 3000 });
-      return r.status === 0;
-    }
-    if (process.platform === "darwin") {
-      const r = spawnSync("pbcopy", [], { input: s, encoding: "utf8", timeout: 3000 });
-      return r.status === 0;
-    }
-    for (const [cmd, args] of [
-      ["wl-copy", []],
-      ["xclip", ["-selection", "clipboard"]],
-      ["xsel", ["--clipboard", "--input"]],
-    ]) {
-      const r = spawnSync(cmd, args, { input: s, encoding: "utf8", timeout: 3000 });
-      if (!r.error && r.status === 0) return true;
-    }
-  } catch {
-    // ignore
-  }
-  return false;
-}
 
 const VERIFY_TIMEOUT_MS = 15_000;
 /** 浏览器登录等待回调的上限。 */
@@ -275,18 +236,15 @@ export function startCallbackServer({ timeoutMs = CALLBACK_TIMEOUT_MS, signal, l
   });
 }
 
-/** ③ 浏览器登录（手动打开链接，不自动弹浏览器）：显示/复制链接并粘贴 code。 */
+/** ③ 浏览器登录（手动打开链接，不自动弹浏览器）：复制链接后粘贴 code。 */
 function browserMethod({ options, lang, fetchImpl }) {
   const origin = trimSlash(options.baseOrigin || DEFAULT_BASE_ORIGIN);
   const state = randomBytes(16).toString("hex");
-  const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}`;
-  const copied = tryCopyToClipboard(loginUrl);
+  const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`;
 
-  const finish = async (raw) => {
-    let value = String(raw ?? "").trim();
-    if (!value || value === loginUrl) {
-      return { type: "failed", error: t(lang, "errCodeMissing") };
-    }
+  const finish = async (code) => {
+    let value = String(code ?? "").trim();
+    if (!value) return { type: "failed", error: t(lang, "errKeyMissing") };
     // 允许直接粘贴完整回调 URL
     try {
       const u = new URL(value);
@@ -295,7 +253,6 @@ function browserMethod({ options, lang, fetchImpl }) {
     } catch {
       // 不是 URL，当作 code
     }
-    if (!value) return { type: "failed", error: t(lang, "errCodeMissing") };
     try {
       const cred = await exchangeCode(origin, value, { fetchImpl });
       return directSuccess({
@@ -308,8 +265,6 @@ function browserMethod({ options, lang, fetchImpl }) {
     }
   };
 
-  const urlHint = copied ? t(lang, "browserLinkCopied") : t(lang, "browserCopyUrl");
-
   return {
     type: "api",
     label: t(lang, "loginBrowser"),
@@ -317,29 +272,22 @@ function browserMethod({ options, lang, fetchImpl }) {
       {
         type: "text",
         key: "login_url",
-        message: `${loginUrl}\n\n${urlHint}`,
-        label: "Login URL",
-        description: loginUrl,
+        message: `${t(lang, "browserCopyUrl")}\n\n${loginUrl}`,
         placeholder: loginUrl,
         default: loginUrl,
         initial: loginUrl,
         value: loginUrl,
-        initialValue: loginUrl,
-        defaultValue: loginUrl,
-        prefill: loginUrl,
-        content: loginUrl,
-        text: loginUrl,
       },
       {
         type: "text",
         key: "code",
-        message: `${urlHint}\n\n${loginUrl}\n\n${t(lang, "browserPasteCode")}`,
-        placeholder: loginUrl,
+        message: t(lang, "browserPasteCode"),
+        placeholder: "code",
       },
     ],
     async authorize(inputs = {}) {
-      const raw = String(inputs.code ?? inputs.key ?? pickKey(inputs) ?? "").trim();
-      return finish(raw);
+      const code = String(inputs.code ?? inputs.key ?? pickKey(inputs) ?? "").trim();
+      return finish(code);
     },
   };
 }

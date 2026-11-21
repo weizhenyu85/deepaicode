@@ -37,10 +37,8 @@ const MESSAGES = {
     checkinLocked: "今日签到次数已达上游上限，明日自动恢复",
 
     browserInstructions: "请手动复制下面的链接到浏览器打开并登录 DeepAI（不会自动打开浏览器）。登录完成后，若页面无法跳转，请把地址栏里 code= 后面的值粘贴到这里。",
-    browserCopyUrl: "请手动全选复制上面的登录链接，到浏览器打开并完成 DeepAI 登录（不会自动打开浏览器）。",
-    browserLinkCopied: "登录链接已尝试复制到剪贴板，可直接粘贴到浏览器打开并完成 DeepAI 登录（不会自动打开浏览器）。若未复制成功，请手动全选复制上面的链接。",
+    browserCopyUrl: "请复制下面的登录链接到浏览器打开并登录 DeepAI（不会自动打开浏览器）。如果提示文字无法选中，可从上方输入框里全选复制链接：",
     browserPasteCode: "登录完成后，若页面无法跳转，请把地址栏里 code= 后面的值粘贴到这里（也可粘贴整个回调地址）：",
-    errCodeMissing: "缺少登录 code。请复制链接到浏览器登录后，粘贴 code= 后面的值。",
     browserDoneTitle: "登录完成",
     browserDoneBody: "可以回到 magpie 了。",
     browserFailedTitle: "登录失败",
@@ -80,10 +78,8 @@ const MESSAGES = {
     checkinLocked: "Daily check-in limit reached upstream; resumes tomorrow",
 
     browserInstructions: "Manually copy the link below into your browser and sign in to DeepAI (the browser will not open automatically). After signing in, if the page can't redirect, paste the value after code= from the address bar here.",
-    browserCopyUrl: "Select all and copy the sign-in link above, open it in your browser, and sign in to DeepAI (it will not open automatically).",
-    browserLinkCopied: "The sign-in link was copied to your clipboard if possible. Paste it into your browser to sign in to DeepAI (it will not open automatically). If it wasn't copied, select all and copy the link above.",
+    browserCopyUrl: "Copy the sign-in link below and open it in your browser to sign in to DeepAI (it will not open automatically). If you can't select the text, select-all and copy from the input above:",
     browserPasteCode: "After signing in, if the page doesn't redirect, paste the value after code= from the address bar here (you can also paste the full callback URL):",
-    errCodeMissing: "Login code is missing. Copy the link, sign in, then paste the value after code=.",
     browserDoneTitle: "Signed in",
     browserDoneBody: "You can go back to magpie now.",
     browserFailedTitle: "Sign-in failed",
