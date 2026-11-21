@@ -236,15 +236,17 @@ export function startCallbackServer({ timeoutMs = CALLBACK_TIMEOUT_MS, signal, l
   });
 }
 
-/** ③ 浏览器登录（手动打开链接，不自动弹浏览器）：复制链接后粘贴 code。 */
+/** ③ 浏览器登录（手动打开链接，不自动弹浏览器）：预填链接便于复制，再粘贴 code。 */
 function browserMethod({ options, lang, fetchImpl }) {
   const origin = trimSlash(options.baseOrigin || DEFAULT_BASE_ORIGIN);
   const state = randomBytes(16).toString("hex");
   const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`;
 
-  const finish = async (code) => {
-    let value = String(code ?? "").trim();
-    if (!value) return { type: "failed", error: t(lang, "errKeyMissing") };
+  const finish = async (raw) => {
+    let value = String(raw ?? "").trim();
+    if (!value || value === loginUrl) {
+      return { type: "failed", error: t(lang, "errCodeMissing") };
+    }
     // 允许直接粘贴完整回调 URL
     try {
       const u = new URL(value);
@@ -253,6 +255,7 @@ function browserMethod({ options, lang, fetchImpl }) {
     } catch {
       // 不是 URL，当作 code
     }
+    if (!value) return { type: "failed", error: t(lang, "errCodeMissing") };
     try {
       const cred = await exchangeCode(origin, value, { fetchImpl });
       return directSuccess({
@@ -271,23 +274,24 @@ function browserMethod({ options, lang, fetchImpl }) {
     prompts: [
       {
         type: "text",
-        key: "login_url",
-        message: `${t(lang, "browserCopyUrl")}\n\n${loginUrl}`,
+        key: "code",
+        message: `${t(lang, "browserManualLogin")}\n\n${loginUrl}`,
+        label: t(lang, "browserPasteCode"),
+        description: loginUrl,
         placeholder: loginUrl,
         default: loginUrl,
         initial: loginUrl,
         value: loginUrl,
-      },
-      {
-        type: "text",
-        key: "code",
-        message: t(lang, "browserPasteCode"),
-        placeholder: "code",
+        initialValue: loginUrl,
+        defaultValue: loginUrl,
+        prefill: loginUrl,
+        content: loginUrl,
+        text: loginUrl,
       },
     ],
     async authorize(inputs = {}) {
-      const code = String(inputs.code ?? inputs.key ?? pickKey(inputs) ?? "").trim();
-      return finish(code);
+      const raw = String(inputs.code ?? inputs.key ?? pickKey(inputs) ?? "").trim();
+      return finish(raw);
     },
   };
 }
