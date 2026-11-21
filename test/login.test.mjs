@@ -160,7 +160,6 @@ test("浏览器登录：显示可复制登录链接（不自动打开），粘�
   const loginUrl = new URL(match[0]);
   assert.equal(loginUrl.pathname, "/deepai_code/desktop_auth/");
   assert.ok(loginUrl.searchParams.get("state")?.length >= 16);
-  assert.equal(loginUrl.searchParams.get("port"), "0");
 
   const out = await method.authorize({ login_url: loginUrl.toString(), code: "the-code" });
   assert.equal(out.type, "success");

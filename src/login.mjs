@@ -279,7 +279,7 @@ export function startCallbackServer({ timeoutMs = CALLBACK_TIMEOUT_MS, signal, l
 function browserMethod({ options, lang, fetchImpl }) {
   const origin = trimSlash(options.baseOrigin || DEFAULT_BASE_ORIGIN);
   const state = randomBytes(16).toString("hex");
-  const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`;
+  const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}`;
   const copied = tryCopyToClipboard(loginUrl);
 
   const finish = async (raw) => {
