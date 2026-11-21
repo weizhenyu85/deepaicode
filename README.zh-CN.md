@@ -11,10 +11,11 @@
 ## 安装
 
 ```bash
-magpie plugin add magpie-deepaicode            # npm
 magpie plugin add github:weizhenyu85/deepaicode
-magpie plugin add ./magpie-deepaicode          # 本地文件夹
+magpie plugin add ./deepaicode                 # 本地文件夹
 ```
+
+> 请从本 GitHub 仓库安装。npm 上的 `magpie-deepaicode` 是原作者版本，不包含本分支的改动。
 
 应用里：**插件 → 添加插件** → 填文件夹路径或包名。
 

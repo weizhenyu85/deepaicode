@@ -12,10 +12,12 @@ official desktop app does.
 ## Install
 
 ```bash
-magpie plugin add magpie-deepaicode            # npm
 magpie plugin add github:weizhenyu85/deepaicode
-magpie plugin add ./magpie-deepaicode          # a local folder
+magpie plugin add ./deepaicode                 # a local folder
 ```
+
+> Install from this GitHub repository. The npm package `magpie-deepaicode` is the
+> original author's build and does not include this fork's changes.
 
 In the app: **Plugins → Add plugin** → paste the folder path or package name.
 
