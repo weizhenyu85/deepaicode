@@ -15,10 +15,13 @@ export function resolveAccountSettings(auth, options = {}) {
   const origin = trimSlash(options.baseOrigin || DEFAULT_BASE_ORIGIN);
   const key = String(auth?.key ?? "").trim();
   const laneVersion = String(metadata.laneVersion ?? options.laneVersion ?? "auto").trim() || "auto";
-  const machineFp = resolveMachineFingerprint();
+  const machineMode = String(metadata.machineMode ?? options.machineMode ?? "account").trim().toLowerCase() === "device"
+    ? "device"
+    : "account";
+  const machineFp = resolveMachineFingerprint({ apiKey: key, machineMode });
   const username = String(metadata.username ?? "").trim();
 
-  return { mode: "direct", origin, key, laneVersion, machineFp, username };
+  return { mode: "direct", origin, key, laneVersion, machineMode, machineFp, username };
 }
 
 /** 稳定账号 id：同 Key 重登 = 替换而不是新增。 */

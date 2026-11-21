@@ -39,9 +39,9 @@ function inputShape(inputs) {
 }
 
 /** 直连模式的验活：/theos。只有鉴权类错误才判登录失败，网络抖动放行。 */
-async function verifyDirectKey(origin, { key, fetchImpl, lang, laneVersion }) {
-  const machineFp = resolveMachineFingerprint();
-  const lane = await resolveLaneVersion(origin, { explicit: laneVersion, fetchImpl, key });
+async function verifyDirectKey(origin, { key, fetchImpl, lang, laneVersion, machineMode = "account" }) {
+  const machineFp = resolveMachineFingerprint({ apiKey: key, machineMode });
+  const lane = await resolveLaneVersion(origin, { explicit: laneVersion, fetchImpl, key, machineMode });
   try {
     const payload = await getTheos(origin, { key, machineFp, laneVersion: lane, fetchImpl, timeoutMs: VERIFY_TIMEOUT_MS });
     return { ok: true, allowance: normalizeAllowance(payload) };
@@ -114,6 +114,7 @@ function desktopMethod({ options, lang, fetchImpl }) {
         fetchImpl,
         lang,
         laneVersion: options.laneVersion,
+        machineMode: options.machineMode,
       });
       if (!verified.ok) return { type: "failed", error: verified.error };
 
@@ -146,6 +147,7 @@ function pasteMethod({ options, lang, fetchImpl }) {
         fetchImpl,
         lang,
         laneVersion: options.laneVersion,
+        machineMode: options.machineMode,
       });
       if (!verified.ok) return { type: "failed", error: verified.error };
 

@@ -1,6 +1,6 @@
 // 协议取证脚本：不经 magpie，直接验证上游 api.deepai.org 的契约。
 //
-//   node scripts/probe.mjs [--key …] [--secret-dir …] [--base https://api.deepai.org]
+//   node scripts/probe.mjs [--key …] [--secret-dir …] [--base https://api.deepai.org] [--machine-mode account|device]
 //
 // 输出每一步的“阶段 / 状态 / 原话 / 耗时”，全程脱敏（Key 只留前 6 后 4）。
 
@@ -78,8 +78,9 @@ async function runDirect(args) {
   }
   step("credentials", { source, key: maskKey(key), username: username || "(empty)" });
 
-  const machineFp = resolveMachineFingerprint();
-  step("machine", { fingerprint: maskFp(machineFp), source: "device" });
+  const machineMode = String(args["machine-mode"] ?? "account").trim().toLowerCase() === "device" ? "device" : "account";
+  const machineFp = resolveMachineFingerprint({ apiKey: key, machineMode });
+  step("machine", { fingerprint: maskFp(machineFp), source: machineMode });
 
   let code = 0;
   await timed("models", async () => {

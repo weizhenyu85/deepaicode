@@ -58,19 +58,19 @@ export function directHeaders({ key = "", machineFp = "", laneVersion = DEFAULT_
  */
 const laneCache = new Map();
 
-export function resolveLaneVersion(origin, { explicit, fetchImpl, key = "" } = {}) {
+export function resolveLaneVersion(origin, { explicit, fetchImpl, key = "", machineMode = "account" } = {}) {
   const value = String(explicit ?? "auto").trim();
   if (value && value.toLowerCase() !== "auto") return Promise.resolve(value);
 
   const originKey = directOrigin(origin);
   if (!laneCache.has(originKey)) {
-    laneCache.set(originKey, probeLane(originKey, { fetchImpl, key }));
+    laneCache.set(originKey, probeLane(originKey, { fetchImpl, key, machineMode }));
   }
   return laneCache.get(originKey);
 }
 
-async function probeLane(origin, { fetchImpl, key = "" } = {}) {
-  const machineFp = resolveMachineFingerprint();
+async function probeLane(origin, { fetchImpl, key = "", machineMode = "account" } = {}) {
+  const machineFp = resolveMachineFingerprint({ apiKey: key, machineMode });
   for (const lane of LANE_PROBE_SEQUENCE) {
     try {
       await getDirectModels(origin, { key, machineFp, laneVersion: lane, fetchImpl });
