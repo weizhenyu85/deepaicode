@@ -236,25 +236,12 @@ export function startCallbackServer({ timeoutMs = CALLBACK_TIMEOUT_MS, signal, l
   });
 }
 
-/** ③ 浏览器登录（手动打开链接，不自动弹浏览器）：复制链接后粘贴 code。 */
+/** ③ 浏览器 + localhost 回调（复刻桌面端 desktop_auth；失败降级为粘贴 code）。 */
 function browserMethod({ options, lang, fetchImpl }) {
   const origin = trimSlash(options.baseOrigin || DEFAULT_BASE_ORIGIN);
-  const state = randomBytes(16).toString("hex");
-  const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`;
-
   const finish = async (code) => {
-    let value = String(code ?? "").trim();
-    if (!value) return { type: "failed", error: t(lang, "errKeyMissing") };
-    // 允许直接粘贴完整回调 URL
     try {
-      const u = new URL(value);
-      const c = u.searchParams.get("code");
-      if (c) value = c.trim();
-    } catch {
-      // 不是 URL，当作 code
-    }
-    try {
-      const cred = await exchangeCode(origin, value, { fetchImpl });
+      const cred = await exchangeCode(origin, code, { fetchImpl });
       return directSuccess({
         cred,
         source: "browser",
@@ -266,28 +253,45 @@ function browserMethod({ options, lang, fetchImpl }) {
   };
 
   return {
-    type: "api",
+    type: "oauth",
     label: t(lang, "loginBrowser"),
-    prompts: [
-      {
-        type: "text",
-        key: "login_url",
-        message: `${t(lang, "browserCopyUrl")}\n\n${loginUrl}`,
-        placeholder: loginUrl,
-        default: loginUrl,
-        initial: loginUrl,
-        value: loginUrl,
-      },
-      {
-        type: "text",
-        key: "code",
-        message: t(lang, "browserPasteCode"),
-        placeholder: "code",
-      },
-    ],
-    async authorize(inputs = {}) {
-      const code = String(inputs.code ?? inputs.key ?? pickKey(inputs) ?? "").trim();
-      return finish(code);
+    async authorize(_inputs, { signal } = {}) {
+      let server = null;
+      try {
+        server = await startCallbackServer({ signal, lang });
+      } catch {
+        server = null;
+      }
+
+      if (!server) {
+        // 监听失败：退化成“粘贴回调里的 code”
+        const state = randomBytes(8).toString("hex");
+        return {
+          url: `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`,
+          instructions: t(lang, "browserInstructions"),
+          method: "code",
+          async callback(code) {
+            return finish(String(code ?? "").trim());
+          },
+        };
+      }
+
+      const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${server.state}&port=${server.port}`;
+      return {
+        url: loginUrl,
+        instructions: t(lang, "browserInstructions"),
+        method: "auto",
+        async callback() {
+          try {
+            const code = await server.waitForCode();
+            return await finish(code);
+          } catch (err) {
+            return { type: "failed", error: `浏览器登录未完成：${String(err?.message ?? err)}` };
+          } finally {
+            server.close();
+          }
+        },
+      };
     },
   };
 }

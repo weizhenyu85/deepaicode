@@ -18,11 +18,8 @@ function json(body, status = 200) {
 test("createMethods：三路（浏览器推荐在前）", () => {
   const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl: async () => json({}) } });
   assert.equal(methods.length, 3);
-  assert.deepEqual(methods.map((m) => m.type), ["api", "api", "api"]);
+  assert.deepEqual(methods.map((m) => m.type), ["oauth", "api", "api"]);
   assert.match(methods[0].label, /推荐/);
-  const promptKeys = (methods[0].prompts ?? []).map((p) => p.key);
-  assert.ok(promptKeys.includes("login_url"));
-  assert.ok(promptKeys.includes("code"));
   assert.match(methods[1].label, /凭据/);
   assert.match(methods[2].label, /Key/);
 });
@@ -109,71 +106,49 @@ test("debug 日志只记字段名，绝不记录 Key 值", async () => {
   assert.ok(!all.includes(KEY), "日志不得包含 Key 明文");
 });
 
-test("浏览器登录：提供可复制的手动链接（不自动打开），粘贴 code 换 Key", async () => {
-  let called = 0;
+test("浏览器登录：本地回调收到 code 后换 Key", async () => {
   const fetchImpl = async (url, init) => {
-    called += 1;
-    assert.match(url, /\/deepai_code\/desktop_auth\/exchange\/$/);
-    assert.deepEqual(JSON.parse(init.body), { code: "the-code" });
-    return json({ api_key: KEY, username: "ada", is_pro: false });
+    if (url.includes("/desktop_auth/exchange/")) {
+      assert.deepEqual(JSON.parse(init.body), { code: "the-code" });
+      return json({ api_key: KEY, username: "ada", is_pro: false });
+    }
+    throw new Error(`unexpected ${url}`);
   };
   const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl } });
   const method = methods[0];
 
-  assert.equal(method.type, "api");
-  const urlPrompt = method.prompts.find((p) => p.key === "login_url");
-  const codePrompt = method.prompts.find((p) => p.key === "code");
-  assert.ok(urlPrompt, "应有 login_url 提示");
-  assert.ok(codePrompt, "应有 code 输入提示");
+  const authz = await method.authorize({}, {});
+  assert.equal(authz.method, "auto");
 
-  const urlText = [
-    urlPrompt.message,
-    urlPrompt.placeholder,
-    urlPrompt.default,
-    urlPrompt.initial,
-    urlPrompt.value,
-  ]
-    .filter(Boolean)
-    .join("\n");
-  const match = String(urlText).match(/https?:\/\/\S+/);
-  assert.ok(match, "应提供登录链接（可复制）");
-  const loginUrl = new URL(match[0]);
+  const loginUrl = new URL(authz.url);
   assert.equal(loginUrl.pathname, "/deepai_code/desktop_auth/");
-  assert.ok(loginUrl.searchParams.get("state")?.length >= 16);
-  assert.equal(loginUrl.searchParams.get("port"), "0");
+  const state = loginUrl.searchParams.get("state");
+  const port = Number(loginUrl.searchParams.get("port"));
+  assert.ok(port > 0);
+  assert.ok(state.length >= 16);
 
-  const out = await method.authorize({ login_url: loginUrl.toString(), code: "the-code" });
+  const callback = await fetch(`http://127.0.0.1:${port}/auth-callback?code=the-code&state=${state}`);
+  assert.equal(callback.status, 200);
+  assert.match(await callback.text(), /登录完成|Signed in/);
+
+  const out = await authz.callback();
   assert.equal(out.type, "success");
   assert.equal(out.key, KEY);
   assert.equal(out.metadata.source, "browser");
-  assert.equal(called, 1);
 });
 
-test("浏览器登录：粘贴完整回调 URL 时自动提取 code", async () => {
-  let called = 0;
-  const fetchImpl = async (url, init) => {
-    called += 1;
-    assert.deepEqual(JSON.parse(init.body), { code: "the-code" });
-    return json({ api_key: KEY, username: "ada", is_pro: false });
-  };
-  const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl } });
-  const out = await methods[0].authorize({
-    code: "http://127.0.0.1:12345/auth-callback?code=the-code&state=xyz",
-  });
-  assert.equal(out.type, "success");
-  assert.equal(out.key, KEY);
-  assert.equal(called, 1);
-});
+test("浏览器登录：state 不匹配时拒绝回调，取消后返回 failed", async () => {
+  const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl: async () => json({}) } });
+  const method = methods[0];
+  const controller = new AbortController();
+  const authz = await method.authorize({}, { signal: controller.signal });
+  const loginUrl = new URL(authz.url);
+  const port = Number(loginUrl.searchParams.get("port"));
 
-test("浏览器登录：空 code 返回 failed 且不请求上游", async () => {
-  let called = 0;
-  const fetchImpl = async () => {
-    called += 1;
-    return json({});
-  };
-  const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl } });
-  const out = await methods[0].authorize({ code: "   " });
+  const callback = await fetch(`http://127.0.0.1:${port}/auth-callback?code=x&state=wrong`);
+  assert.equal(callback.status, 400);
+
+  controller.abort();
+  const out = await authz.callback();
   assert.equal(out.type, "failed");
-  assert.match(out.error, /缺少 DeepAI API Key/);
-  assert.equal(called, 0);
 });

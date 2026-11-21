@@ -36,9 +36,7 @@ const MESSAGES = {
     checkinIneligible: "该账号不参与每日额度",
     checkinLocked: "今日签到次数已达上游上限，明日自动恢复",
 
-    browserInstructions: "请手动复制下面的链接到浏览器打开并登录 DeepAI（不会自动打开浏览器）。登录完成后，若页面无法跳转，请把地址栏里 code= 后面的值粘贴到这里。",
-    browserCopyUrl: "请复制下面的登录链接到浏览器打开并登录 DeepAI（不会自动打开浏览器）。如果提示文字无法选中，可从上方输入框里全选复制链接：",
-    browserPasteCode: "登录完成后，若页面无法跳转，请把地址栏里 code= 后面的值粘贴到这里（也可粘贴整个回调地址）：",
+    browserInstructions: "在浏览器里登录 DeepAI，完成后会自动跳回本机。若页面显示无法访问，把地址栏里的 code 复制进来即可。",
     browserDoneTitle: "登录完成",
     browserDoneBody: "可以回到 magpie 了。",
     browserFailedTitle: "登录失败",
@@ -77,9 +75,7 @@ const MESSAGES = {
     checkinIneligible: "This account has no daily grant",
     checkinLocked: "Daily check-in limit reached upstream; resumes tomorrow",
 
-    browserInstructions: "Manually copy the link below into your browser and sign in to DeepAI (the browser will not open automatically). After signing in, if the page can't redirect, paste the value after code= from the address bar here.",
-    browserCopyUrl: "Copy the sign-in link below and open it in your browser to sign in to DeepAI (it will not open automatically). If you can't select the text, select-all and copy from the input above:",
-    browserPasteCode: "After signing in, if the page doesn't redirect, paste the value after code= from the address bar here (you can also paste the full callback URL):",
+    browserInstructions: "Sign in to DeepAI in the browser; you'll be sent back to this machine automatically. If the page can't open, paste the code param from the address bar.",
     browserDoneTitle: "Signed in",
     browserDoneBody: "You can go back to magpie now.",
     browserFailedTitle: "Sign-in failed",
