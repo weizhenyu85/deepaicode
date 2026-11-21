@@ -239,6 +239,9 @@ export function startCallbackServer({ timeoutMs = CALLBACK_TIMEOUT_MS, signal, l
 /** ③ 浏览器登录（手动打开链接，不自动弹浏览器）：粘贴回调地址里的 code。 */
 function browserMethod({ options, lang, fetchImpl }) {
   const origin = trimSlash(options.baseOrigin || DEFAULT_BASE_ORIGIN);
+  const state = randomBytes(16).toString("hex");
+  const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`;
+
   const finish = async (code) => {
     const value = String(code ?? "").trim();
     if (!value) return { type: "failed", error: t(lang, "errKeyMissing") };
@@ -255,18 +258,18 @@ function browserMethod({ options, lang, fetchImpl }) {
   };
 
   return {
-    type: "oauth",
+    type: "api",
     label: t(lang, "loginBrowser"),
-    async authorize() {
-      const state = randomBytes(16).toString("hex");
-      const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`;
-      return {
-        instructions: `${t(lang, "browserInstructions")}\n\n${loginUrl}`,
-        method: "code",
-        async callback(code) {
-          return finish(code);
-        },
-      };
+    prompts: [
+      {
+        type: "text",
+        key: "code",
+        message: `${t(lang, "browserInstructions")}\n\n${loginUrl}`,
+      },
+    ],
+    async authorize(inputs = {}) {
+      const code = String(inputs.code ?? inputs.key ?? pickKey(inputs) ?? "").trim();
+      return finish(code);
     },
   };
 }

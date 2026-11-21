@@ -18,8 +18,9 @@ function json(body, status = 200) {
 test("createMethods：三路（浏览器推荐在前）", () => {
   const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl: async () => json({}) } });
   assert.equal(methods.length, 3);
-  assert.deepEqual(methods.map((m) => m.type), ["oauth", "api", "api"]);
+  assert.deepEqual(methods.map((m) => m.type), ["api", "api", "api"]);
   assert.match(methods[0].label, /推荐/);
+  assert.ok(Array.isArray(methods[0].prompts) && methods[0].prompts.some((p) => p.key === "code"));
   assert.match(methods[1].label, /凭据/);
   assert.match(methods[2].label, /Key/);
 });
@@ -106,7 +107,7 @@ test("debug 日志只记字段名，绝不记录 Key 值", async () => {
   assert.ok(!all.includes(KEY), "日志不得包含 Key 明文");
 });
 
-test("浏览器登录：返回手动链接（不自动打开、不启本地回调），粘贴 code 换 Key", async () => {
+test("浏览器登录：提示里给出手动链接（不自动打开），粘贴 code 换 Key", async () => {
   let called = 0;
   const fetchImpl = async (url, init) => {
     called += 1;
@@ -117,18 +118,17 @@ test("浏览器登录：返回手动链接（不自动打开、不启本地回�
   const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl } });
   const method = methods[0];
 
-  const authz = await method.authorize({}, {});
-  assert.equal(authz.method, "code");
-  assert.equal(authz.url, undefined, "不应返回 url，避免 magpie 自动打开浏览器");
-
-  const match = authz.instructions.match(/https?:\/\/\S+/);
-  assert.ok(match, "instructions 里应包含登录链接");
+  assert.equal(method.type, "api");
+  const prompt = method.prompts.find((p) => p.key === "code");
+  assert.ok(prompt, "应有 code 输入提示");
+  const match = String(prompt.message).match(/https?:\/\/\S+/);
+  assert.ok(match, "提示里应包含登录链接");
   const loginUrl = new URL(match[0]);
   assert.equal(loginUrl.pathname, "/deepai_code/desktop_auth/");
   assert.ok(loginUrl.searchParams.get("state")?.length >= 16);
   assert.equal(loginUrl.searchParams.get("port"), "0");
 
-  const out = await authz.callback("the-code");
+  const out = await method.authorize({ code: "the-code" });
   assert.equal(out.type, "success");
   assert.equal(out.key, KEY);
   assert.equal(out.metadata.source, "browser");
@@ -142,8 +142,7 @@ test("浏览器登录：空 code 返回 failed 且不请求上游", async () => 
     return json({});
   };
   const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl } });
-  const authz = await methods[0].authorize({}, {});
-  const out = await authz.callback("   ");
+  const out = await methods[0].authorize({ code: "   " });
   assert.equal(out.type, "failed");
   assert.match(out.error, /缺少 DeepAI API Key/);
   assert.equal(called, 0);
