@@ -27,7 +27,7 @@ In the app: **Plugins → Add plugin** → paste the folder path or package name
 
 | Method | Needs | Notes |
 |---|---|---|
-| **Sign in with DeepAI** (recommended) | a DeepAI account | opens `desktop_auth`, listens on a random `127.0.0.1` port for the callback, exchanges the code; falls back to pasting the `code` if it cannot listen |
+| **Sign in with DeepAI** (recommended) | a DeepAI account | shows a `desktop_auth` URL to open manually (no browser auto-open); after sign-in, paste the `code` value from the redirect address |
 | **Read desktop credentials** | the DeepAI Code desktop app signed in once | reads `~/.deepai-code/userdata/secrets/deepai-account.bin` (plaintext JSON); in the key prompt type **`auto`** (or paste a key to use that instead) |
 | **Paste API key** | a DeepAI API key (UUID form) | validated against `/theos` before it is saved |
 

@@ -236,12 +236,14 @@ export function startCallbackServer({ timeoutMs = CALLBACK_TIMEOUT_MS, signal, l
   });
 }
 
-/** ③ 浏览器 + localhost 回调（复刻桌面端 desktop_auth；失败降级为粘贴 code）。 */
+/** ③ 浏览器登录（手动打开链接，不自动弹浏览器）：粘贴回调地址里的 code。 */
 function browserMethod({ options, lang, fetchImpl }) {
   const origin = trimSlash(options.baseOrigin || DEFAULT_BASE_ORIGIN);
   const finish = async (code) => {
+    const value = String(code ?? "").trim();
+    if (!value) return { type: "failed", error: t(lang, "errKeyMissing") };
     try {
-      const cred = await exchangeCode(origin, code, { fetchImpl });
+      const cred = await exchangeCode(origin, value, { fetchImpl });
       return directSuccess({
         cred,
         source: "browser",
@@ -255,41 +257,14 @@ function browserMethod({ options, lang, fetchImpl }) {
   return {
     type: "oauth",
     label: t(lang, "loginBrowser"),
-    async authorize(_inputs, { signal } = {}) {
-      let server = null;
-      try {
-        server = await startCallbackServer({ signal, lang });
-      } catch {
-        server = null;
-      }
-
-      if (!server) {
-        // 监听失败：退化成“粘贴回调里的 code”
-        const state = randomBytes(8).toString("hex");
-        return {
-          url: `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`,
-          instructions: t(lang, "browserInstructions"),
-          method: "code",
-          async callback(code) {
-            return finish(String(code ?? "").trim());
-          },
-        };
-      }
-
-      const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${server.state}&port=${server.port}`;
+    async authorize() {
+      const state = randomBytes(16).toString("hex");
+      const loginUrl = `${origin}/deepai_code/desktop_auth/?state=${state}&port=0`;
       return {
-        url: loginUrl,
-        instructions: t(lang, "browserInstructions"),
-        method: "auto",
-        async callback() {
-          try {
-            const code = await server.waitForCode();
-            return await finish(code);
-          } catch (err) {
-            return { type: "failed", error: `浏览器登录未完成：${String(err?.message ?? err)}` };
-          } finally {
-            server.close();
-          }
+        instructions: `${t(lang, "browserInstructions")}\n\n${loginUrl}`,
+        method: "code",
+        async callback(code) {
+          return finish(code);
         },
       };
     },

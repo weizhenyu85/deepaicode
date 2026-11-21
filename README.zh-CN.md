@@ -25,7 +25,7 @@ magpie plugin add ./deepaicode                 # 本地文件夹
 
 | 方式 | 需要什么 | 说明 |
 |---|---|---|
-| **浏览器登录 DeepAI**（推荐） | 一个 DeepAI 账号 | 打开 `desktop_auth`，在随机 `127.0.0.1` 端口等回调，换回 Key；监听失败时降级为粘贴回调里的 `code` |
+| **浏览器登录 DeepAI**（推荐） | 一个 DeepAI 账号 | 显示 `desktop_auth` 链接供手动打开（不会自动弹浏览器）；登录后粘贴跳转地址里的 `code` 值 |
 | **读取本机 DeepAI Code 凭据** | DeepAI Code 桌面端登录过一次 | 读 `~/.deepai-code/userdata/secrets/deepai-account.bin`（明文 JSON）；Key 提示填 **`auto`**（也可以直接粘贴 Key 改用粘贴的值） |
 | **粘贴 API Key** | 一个 DeepAI API Key（UUID 形态） | 保存前先用 `/theos` 验活 |
 

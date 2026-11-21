@@ -36,7 +36,7 @@ const MESSAGES = {
     checkinIneligible: "该账号不参与每日额度",
     checkinLocked: "今日签到次数已达上游上限，明日自动恢复",
 
-    browserInstructions: "在浏览器里登录 DeepAI，完成后会自动跳回本机。若页面显示无法访问，把地址栏里的 code 复制进来即可。",
+    browserInstructions: "请手动复制下面的链接到浏览器打开并登录 DeepAI（不会自动打开浏览器）。登录完成后，若页面无法跳转，请把地址栏里 code= 后面的值粘贴到这里。",
     browserDoneTitle: "登录完成",
     browserDoneBody: "可以回到 magpie 了。",
     browserFailedTitle: "登录失败",
@@ -75,7 +75,7 @@ const MESSAGES = {
     checkinIneligible: "This account has no daily grant",
     checkinLocked: "Daily check-in limit reached upstream; resumes tomorrow",
 
-    browserInstructions: "Sign in to DeepAI in the browser; you'll be sent back to this machine automatically. If the page can't open, paste the code param from the address bar.",
+    browserInstructions: "Manually copy the link below into your browser and sign in to DeepAI (the browser will not open automatically). After signing in, if the page can't redirect, paste the value after code= from the address bar here.",
     browserDoneTitle: "Signed in",
     browserDoneBody: "You can go back to magpie now.",
     browserFailedTitle: "Sign-in failed",
