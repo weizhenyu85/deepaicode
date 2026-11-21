@@ -37,7 +37,9 @@ const MESSAGES = {
     checkinLocked: "今日签到次数已达上游上限，明日自动恢复",
 
     browserInstructions: "请手动复制下面的链接到浏览器打开并登录 DeepAI（不会自动打开浏览器）。登录完成后，若页面无法跳转，请把地址栏里 code= 后面的值粘贴到这里。",
-    browserManualLogin: "请先全选并复制下方输入框中的登录链接，到浏览器打开并完成 DeepAI 登录（不会自动打开浏览器）。完成后回到这里，清空输入框并粘贴地址栏里 code= 后面的值（也可直接粘贴整个回调地址），再确认。",
+    browserCopyUrl: "请手动全选复制上面的登录链接，到浏览器打开并完成 DeepAI 登录（不会自动打开浏览器）。",
+    browserLinkCopied: "登录链接已尝试复制到剪贴板，可直接粘贴到浏览器打开并完成 DeepAI 登录（不会自动打开浏览器）。若未复制成功，请手动全选复制上面的链接。",
+    browserPasteCode: "登录完成后，若页面无法跳转，请把地址栏里 code= 后面的值粘贴到这里（也可粘贴整个回调地址）：",
     errCodeMissing: "缺少登录 code。请复制链接到浏览器登录后，粘贴 code= 后面的值。",
     browserDoneTitle: "登录完成",
     browserDoneBody: "可以回到 magpie 了。",
@@ -78,7 +80,9 @@ const MESSAGES = {
     checkinLocked: "Daily check-in limit reached upstream; resumes tomorrow",
 
     browserInstructions: "Manually copy the link below into your browser and sign in to DeepAI (the browser will not open automatically). After signing in, if the page can't redirect, paste the value after code= from the address bar here.",
-    browserManualLogin: "Select all and copy the sign-in link in the input below, open it in your browser, and sign in to DeepAI (it will not open automatically). After signing in, come back here, clear the input, paste the value after code= from the address bar (or paste the full callback URL), then confirm.",
+    browserCopyUrl: "Select all and copy the sign-in link above, open it in your browser, and sign in to DeepAI (it will not open automatically).",
+    browserLinkCopied: "The sign-in link was copied to your clipboard if possible. Paste it into your browser to sign in to DeepAI (it will not open automatically). If it wasn't copied, select all and copy the link above.",
+    browserPasteCode: "After signing in, if the page doesn't redirect, paste the value after code= from the address bar here (you can also paste the full callback URL):",
     errCodeMissing: "Login code is missing. Copy the link, sign in, then paste the value after code=.",
     browserDoneTitle: "Signed in",
     browserDoneBody: "You can go back to magpie now.",

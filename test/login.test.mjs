@@ -21,20 +21,20 @@ test("createMethods：三路（浏览器推荐在前）", () => {
   assert.deepEqual(methods.map((m) => m.type), ["api", "api", "api"]);
   assert.match(methods[0].label, /推荐/);
   const prompts = methods[0].prompts ?? [];
-  assert.deepEqual(prompts.map((p) => p.key), ["code"]);
-  const prompt = prompts[0];
+  assert.deepEqual(prompts.map((p) => p.key), ["login_url", "code"]);
+  const urlPrompt = prompts[0];
   const urlText = [
-    prompt.message,
-    prompt.description,
-    prompt.placeholder,
-    prompt.default,
-    prompt.initial,
-    prompt.value,
-    prompt.initialValue,
-    prompt.defaultValue,
-    prompt.prefill,
-    prompt.content,
-    prompt.text,
+    urlPrompt.message,
+    urlPrompt.description,
+    urlPrompt.placeholder,
+    urlPrompt.default,
+    urlPrompt.initial,
+    urlPrompt.value,
+    urlPrompt.initialValue,
+    urlPrompt.defaultValue,
+    urlPrompt.prefill,
+    urlPrompt.content,
+    urlPrompt.text,
   ]
     .filter(Boolean)
     .join("\n");
@@ -125,7 +125,7 @@ test("debug 日志只记字段名，绝不记录 Key 值", async () => {
   assert.ok(!all.includes(KEY), "日志不得包含 Key 明文");
 });
 
-test("浏览器登录：输入框预填可复制链接（不自动打开），粘贴 code 换 Key", async () => {
+test("浏览器登录：显示可复制登录链接（不自动打开），粘贴 code 换 Key", async () => {
   let called = 0;
   const fetchImpl = async (url, init) => {
     called += 1;
@@ -137,31 +137,32 @@ test("浏览器登录：输入框预填可复制链接（不自动打开），�
   const method = methods[0];
 
   assert.equal(method.type, "api");
-  assert.deepEqual((method.prompts ?? []).map((p) => p.key), ["code"]);
-  const prompt = method.prompts[0];
+  const prompts = method.prompts ?? [];
+  assert.deepEqual(prompts.map((p) => p.key), ["login_url", "code"]);
+  const urlPrompt = prompts[0];
   const urlText = [
-    prompt.message,
-    prompt.description,
-    prompt.placeholder,
-    prompt.default,
-    prompt.initial,
-    prompt.value,
-    prompt.initialValue,
-    prompt.defaultValue,
-    prompt.prefill,
-    prompt.content,
-    prompt.text,
+    urlPrompt.message,
+    urlPrompt.description,
+    urlPrompt.placeholder,
+    urlPrompt.default,
+    urlPrompt.initial,
+    urlPrompt.value,
+    urlPrompt.initialValue,
+    urlPrompt.defaultValue,
+    urlPrompt.prefill,
+    urlPrompt.content,
+    urlPrompt.text,
   ]
     .filter(Boolean)
     .join("\n");
   const match = String(urlText).match(/https?:\/\/\S+/);
-  assert.ok(match, "应提供可复制的登录链接");
+  assert.ok(match, "应提供登录链接");
   const loginUrl = new URL(match[0]);
   assert.equal(loginUrl.pathname, "/deepai_code/desktop_auth/");
   assert.ok(loginUrl.searchParams.get("state")?.length >= 16);
   assert.equal(loginUrl.searchParams.get("port"), "0");
 
-  const out = await method.authorize({ code: "the-code" });
+  const out = await method.authorize({ login_url: loginUrl.toString(), code: "the-code" });
   assert.equal(out.type, "success");
   assert.equal(out.key, KEY);
   assert.equal(out.metadata.source, "browser");
@@ -184,15 +185,17 @@ test("浏览器登录：粘贴完整回调 URL 时自动提取 code", async () =
   assert.equal(called, 1);
 });
 
-test("浏览器登录：未替换预填链接或空 code 返回 failed 且不请求上游", async () => {
+test("浏览器登录：空 code 返回 failed 且不请求上游", async () => {
   let called = 0;
   const fetchImpl = async () => {
     called += 1;
     return json({});
   };
   const methods = createMethods({ options: { lang: "zh" }, deps: { fetchImpl } });
-  const prompt = methods[0].prompts[0];
-  const loginUrl = String(prompt.default || prompt.value || prompt.initialValue || "");
+  const urlPrompt = methods[0].prompts.find((p) => p.key === "login_url");
+  const loginUrl = String(
+    urlPrompt?.default || urlPrompt?.value || urlPrompt?.initialValue || "",
+  );
 
   const empty = await methods[0].authorize({ code: "   " });
   assert.equal(empty.type, "failed");
