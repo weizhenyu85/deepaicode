@@ -2,7 +2,7 @@
 
 ## 0.2.5 — 2026-11-19
 
-回应 [issue #9](https://github.com/aqiu817/magpie-deepaicode/issues/9)（长对话 `200 + unexpected EOF`）：
+回应 issue #9（长对话 `200 + unexpected EOF`）：
 
 - **SSE 截断检测**：流式响应现在包一层透传检查——主路径逐字节原样（不缓冲、
   延迟不增加），只保留尾部 4 KiB 窗口；流关闭时若无 `[DONE]` 也无任何
@@ -48,8 +48,7 @@
 ## 0.2.1 — 2026-11-08
 
 上游于 2026-11-07 起对请求做“客户端形状”校验，旧版插件全线 426/400（issue #1/#2）。
-本版按两次外部甄别（[#3](https://github.com/aqiu817/magpie-deepaicode/pull/3) mun0602、
-[#5](https://github.com/aqiu817/magpie-deepaicode/pull/5) Kling0012，感谢！）合并修复，
+本版按两次外部甄别（#3 mun0602、#5 Kling0012，感谢！）合并修复，
 并经本机甄别实验定案（2026-11-08 实测）：
 
 - **显式 `User-Agent: magpie-deepaicode/<version>`**（所有直连请求）：Node 宿主的

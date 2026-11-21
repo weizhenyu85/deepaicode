@@ -13,7 +13,7 @@ official desktop app does.
 
 ```bash
 magpie plugin add magpie-deepaicode            # npm
-magpie plugin add github:aqiu817/magpie-deepaicode
+magpie plugin add github:weizhenyu85/deepaicode
 magpie plugin add ./magpie-deepaicode          # a local folder
 ```
 

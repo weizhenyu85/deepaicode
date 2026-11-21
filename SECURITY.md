@@ -2,7 +2,7 @@
 
 ## Reporting
 
-Open an issue at https://github.com/aqiu817/magpie-deepaicode/issues (or a private
+Open an issue at https://github.com/weizhenyu85/deepaicode/issues (or a private
 security advisory if the repository offers one). Please do not include real API keys or
 credential files in reports — the probe script already masks them.
 

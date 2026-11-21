@@ -53,7 +53,7 @@
 `system`/`developer`，`/responses` 必须带非空 `instructions`；缺失时上游回
 `400 "This request is not one DeepAI Code sends."`（内容不检查）。插件在缺失时自动
 补一条最简 `system` / `instructions`，不改已有内容。经桌面端本地中继回放验证与 UA
-过滤相互独立（[#3](https://github.com/aqiu817/magpie-deepaicode/pull/3) 的证据）。
+过滤相互独立（#3 的证据）。
 
 **机器指纹的策略（0.2.0）**：指纹取真实设备标识——Windows 为
 SMBIOS `Win32_ComputerSystemProduct.UUID`（回落 `MachineGuid`）、macOS 为
@@ -133,7 +133,7 @@ secrets : <base>/userdata/secrets → <base>/secrets → <base>/dev/secrets
 4. 无效 Key 会 302 跳登录页——所有请求必须禁止跟随重定向。
 5. `prompt_cache_key`（body）与 `X-Session-Affinity`（头）都影响上游调度。
 6. 上游对 `/models` 的车道值做白名单校验（`2`/`4` → 200，`5` → 426），且无签到副作用——插件默认 `laneVersion: "auto"` 利用这一点自动跟进未来升车道，无需发版。注意 `/models` 自 2026-11-14 起要求 `Api-Key`（无 key 401），探测必须带 key。
-7. 2026-11-07 的"lane 2 全线 426"观察是 `user-agent: node` 污染下的测量假象（[#5](https://github.com/aqiu817/magpie-deepaicode/pull/5) 定位）；排查这类协议问题时先固定 UA 再下结论。
+7. 2026-11-07 的"lane 2 全线 426"观察是 `user-agent: node` 污染下的测量假象（#5 定位）；排查这类协议问题时先固定 UA 再下结论。
 
 ---
 
@@ -166,7 +166,7 @@ magpie 的 `auth.usage` 约定：
 | 6 | **magpie 是否展示 `reasoning`** | ✅ 实测 | 2026-11-06 晚真实 Agent 会话（`deepseek-v4.1-flash`）：「思考 · 持续 4 秒」块正常渲染 → magpie 原生展示上游 `reasoning`；SSE 行级补写**不需要启用** |
 | 7 | 浏览器登录 `desktop_auth` 的 `state`/`port` 规则 | ❓ 未验证 | 未做浏览器实登；`localhost` 回调与 code 降级已由单测覆盖 |
 | 8 | 插件 fetch 的 URL 形状 | ✅ 实测 | magpie 拼成 `{baseURL}/chat/completions` 或 `{baseURL}/responses`；插件的路径重建与之兼容（重复 `/deepai_code` 也能纠正） |
-| 9 | **2026-11-08 车道协议适配** | ✅ 实测 | lane 4 + Instance + system 整形 + 显式 UA → chat 200（真实账号单发验证）；models 200（18 模型，lane 2/4 均 200、5 → 426）；致谢 [#3](https://github.com/aqiu817/magpie-deepaicode/pull/3) 与 [#5](https://github.com/aqiu817/magpie-deepaicode/pull/5) 的甄别工作 |
+| 9 | **2026-11-08 车道协议适配** | ✅ 实测 | lane 4 + Instance + system 整形 + 显式 UA → chat 200（真实账号单发验证）；models 200（18 模型，lane 2/4 均 200、5 → 426）；致谢 #3 与 #5 的甄别工作 |
 
 ## 4. 真机实测记录（2026-11-06）
 
